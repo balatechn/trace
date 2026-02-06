@@ -1,0 +1,24 @@
+[Unit]
+Description=Trace Device Location Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/python3 /opt/trace-agent/agent.py
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/etc/trace
+PrivateTmp=true
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+# Trace Device Agent Dependencies
+requests>=2.31.0
+schedule>=1.2.0
+psutil>=5.9.0
+pywin32>=306; sys_platform == 'win32'
+keyring>=24.3.0
+python-daemon>=3.0.1; sys_platform != 'win32'
+geocoder>=1.38.1
