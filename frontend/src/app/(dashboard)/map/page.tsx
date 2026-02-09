@@ -88,7 +88,7 @@ export default function MapPage() {
   };
 
   // Get unique departments
-  const departments = [...new Set(devices.map((d) => d.department).filter(Boolean))];
+  const departments = Array.from(new Set(devices.map((d) => d.department).filter((d): d is string => Boolean(d))));
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col gap-4">
