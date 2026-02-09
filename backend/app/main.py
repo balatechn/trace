@@ -21,6 +21,38 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+async def create_default_admin():
+    """Create default admin user if none exists"""
+    from sqlalchemy import select
+    from app.models.database import async_session_maker
+    from app.models.user import User, UserRole
+    from app.core.security import get_password_hash
+    
+    try:
+        async with async_session_maker() as session:
+            result = await session.execute(select(User).where(User.role == UserRole.SUPER_ADMIN))
+            admin = result.scalar_one_or_none()
+            
+            if not admin:
+                admin = User(
+                    email="admin@yourcompany.com",
+                    hashed_password=get_password_hash("Admin123!"),
+                    full_name="System Administrator",
+                    role=UserRole.SUPER_ADMIN,
+                    department="IT",
+                    is_active=True,
+                    is_verified=True,
+                    consent_given=True
+                )
+                session.add(admin)
+                await session.commit()
+                logger.info("Default admin user created: admin@yourcompany.com")
+            else:
+                logger.info("Admin user already exists")
+    except Exception as e:
+        logger.error(f"Error creating admin: {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
@@ -28,6 +60,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Trace Asset Management System...")
     await init_db()
     logger.info("Database initialized")
+    await create_default_admin()
     yield
     # Shutdown
     logger.info("Shutting down Trace Asset Management System...")
