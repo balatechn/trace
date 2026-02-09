@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Lock, 
   Unlock, 
@@ -147,9 +147,9 @@ export function RemoteControlPanel({ device, onClose, onRefresh }: RemoteControl
   };
 
   // Fetch command history on mount
-  useState(() => {
+  useEffect(() => {
     fetchCommandHistory();
-  });
+  }, [device.id]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
