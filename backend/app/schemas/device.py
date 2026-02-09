@@ -141,7 +141,14 @@ class DeviceLocationResponse(BaseModel):
     status: DeviceStatus
 
 
+class CommandInfo(BaseModel):
+    id: Optional[str] = None
+    type: str  # lock, unlock, restart, shutdown, screenshot, message, execute
+    payload: Optional[dict] = None  # For message content, execute command, etc.
+
+
 class DeviceCommandResponse(BaseModel):
-    command: Optional[str] = None  # lock, wipe, update, none
+    command: Optional[str] = None  # Deprecated: single command (lock, wipe, update, none)
     command_id: Optional[str] = None
     message: Optional[str] = None
+    commands: Optional[list[CommandInfo]] = None  # New: list of pending commands

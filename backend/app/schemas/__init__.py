@@ -9,7 +9,8 @@ from app.schemas.user import (
 from app.schemas.device import (
     DeviceBase, DeviceCreate, DeviceRegister, DeviceAgentPing, DeviceUpdate,
     DeviceLockRequest, DeviceWipeRequest, DeviceResponse, DeviceListResponse,
-    DeviceRegistrationResponse, DeviceLocationResponse, DeviceCommandResponse
+    DeviceRegistrationResponse, DeviceLocationResponse, DeviceCommandResponse,
+    CommandInfo
 )
 from app.schemas.location import (
     LocationHistoryResponse, LocationHistoryListResponse, LocationQuery,
@@ -36,6 +37,7 @@ __all__ = [
     "DeviceBase", "DeviceCreate", "DeviceRegister", "DeviceAgentPing", "DeviceUpdate",
     "DeviceLockRequest", "DeviceWipeRequest", "DeviceResponse", "DeviceListResponse",
     "DeviceRegistrationResponse", "DeviceLocationResponse", "DeviceCommandResponse",
+    "CommandInfo",
     # Location
     "LocationHistoryResponse", "LocationHistoryListResponse", "LocationQuery",
     "AllDevicesLocationResponse",

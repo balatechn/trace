@@ -11,11 +11,26 @@ import socket
 import platform
 import threading
 import subprocess
+import base64
+import io
+import ctypes
 from datetime import datetime
 from pathlib import Path
 
 import requests
 import geocoder
+
+# Optional imports for screenshot
+try:
+    from PIL import ImageGrab
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
+
+# For Windows message boxes
+if platform.system() == 'Windows':
+    import ctypes
+    MessageBox = ctypes.windll.user32.MessageBoxW
 
 # Configuration
 CONFIG_FILE = Path(os.getenv('APPDATA', '.')) / 'Trace' / 'config.json'
@@ -324,12 +339,199 @@ class TraceAgent:
     def handle_commands(self, commands: list):
         """Handle commands from server"""
         for cmd in commands:
-            log(f"Received command: {cmd}")
+            command_id = cmd.get('id')
+            command_type = cmd.get('type') or cmd.get('action')
+            log(f"Received command: {command_type} (ID: {command_id})")
             
-            if cmd.get('action') == 'lock':
-                self.lock_device()
-            elif cmd.get('action') == 'wipe':
-                self.wipe_device()
+            result = None
+            success = False
+            
+            try:
+                if command_type in ['lock', 'LOCK']:
+                    self.lock_device()
+                    success = True
+                    result = "Device locked successfully"
+                elif command_type in ['unlock', 'UNLOCK']:
+                    # Unlock is typically not possible remotely for security
+                    result = "Unlock not supported for security reasons"
+                    success = False
+                elif command_type in ['restart', 'RESTART']:
+                    success, result = self.restart_device()
+                elif command_type in ['shutdown', 'SHUTDOWN']:
+                    success, result = self.shutdown_device()
+                elif command_type in ['screenshot', 'SCREENSHOT']:
+                    success, result = self.take_screenshot()
+                elif command_type in ['message', 'MESSAGE']:
+                    message = cmd.get('payload', {}).get('message', 'Message from IT Admin')
+                    title = cmd.get('payload', {}).get('title', 'Trace Admin')
+                    success = self.show_message(message, title)
+                    result = "Message displayed" if success else "Failed to display message"
+                elif command_type in ['wipe', 'WIPE']:
+                    self.wipe_device()
+                    result = "Wipe command received (disabled for safety)"
+                    success = False
+                elif command_type in ['execute', 'EXECUTE']:
+                    # Execute custom command (use with caution)
+                    cmd_text = cmd.get('payload', {}).get('command', '')
+                    if cmd_text:
+                        success, result = self.execute_command(cmd_text)
+                    else:
+                        result = "No command specified"
+                        success = False
+                else:
+                    result = f"Unknown command type: {command_type}"
+                    success = False
+            except Exception as e:
+                result = f"Error executing command: {str(e)}"
+                success = False
+                log(f"Command execution error: {e}")
+            
+            # Report result back to server
+            if command_id:
+                self.report_command_result(command_id, success, result)
+    
+    def report_command_result(self, command_id: str, success: bool, result: str):
+        """Report command execution result back to server"""
+        try:
+            payload = {
+                'command_id': command_id,
+                'status': 'executed' if success else 'failed',
+                'result': result if success else None,
+                'error_message': result if not success else None
+            }
+            
+            response = requests.post(
+                f"{self.config['server_url']}/agent/command-result",
+                json=payload,
+                headers={'Authorization': f"Bearer {self.config['agent_token']}"},
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                log(f"Command result reported: {success}")
+            else:
+                log(f"Failed to report command result: {response.status_code}")
+        except Exception as e:
+            log(f"Error reporting command result: {e}")
+    
+    def take_screenshot(self) -> tuple:
+        """Capture and upload screenshot"""
+        log("SCREENSHOT COMMAND RECEIVED!")
+        try:
+            if not HAS_PIL:
+                return False, "PIL not installed - cannot capture screenshot"
+            
+            # Capture screenshot
+            screenshot = ImageGrab.grab()
+            
+            # Convert to base64 JPEG
+            buffer = io.BytesIO()
+            screenshot.save(buffer, format='JPEG', quality=70)
+            screenshot_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            
+            # Upload to server
+            payload = {
+                'screenshot': screenshot_base64,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            response = requests.post(
+                f"{self.config['server_url']}/agent/screenshot",
+                json=payload,
+                headers={'Authorization': f"Bearer {self.config['agent_token']}"},
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                log("Screenshot captured and uploaded")
+                return True, "Screenshot captured successfully"
+            else:
+                return False, f"Failed to upload screenshot: {response.status_code}"
+                
+        except Exception as e:
+            log(f"Screenshot error: {e}")
+            return False, f"Screenshot failed: {str(e)}"
+    
+    def restart_device(self) -> tuple:
+        """Restart the device"""
+        log("RESTART COMMAND RECEIVED!")
+        try:
+            if platform.system() == 'Windows':
+                subprocess.run('shutdown /r /t 30 /c "Remote restart initiated by IT Admin"', shell=True)
+                return True, "Restart scheduled in 30 seconds"
+            elif platform.system() == 'Linux':
+                subprocess.run(['sudo', 'shutdown', '-r', '+1', 'Remote restart initiated'])
+                return True, "Restart scheduled in 1 minute"
+            elif platform.system() == 'Darwin':
+                subprocess.run(['sudo', 'shutdown', '-r', '+1'])
+                return True, "Restart scheduled in 1 minute"
+            else:
+                return False, f"Restart not supported on {platform.system()}"
+        except Exception as e:
+            log(f"Restart error: {e}")
+            return False, f"Restart failed: {str(e)}"
+    
+    def shutdown_device(self) -> tuple:
+        """Shutdown the device"""
+        log("SHUTDOWN COMMAND RECEIVED!")
+        try:
+            if platform.system() == 'Windows':
+                subprocess.run('shutdown /s /t 30 /c "Remote shutdown initiated by IT Admin"', shell=True)
+                return True, "Shutdown scheduled in 30 seconds"
+            elif platform.system() == 'Linux':
+                subprocess.run(['sudo', 'shutdown', '-h', '+1', 'Remote shutdown initiated'])
+                return True, "Shutdown scheduled in 1 minute"
+            elif platform.system() == 'Darwin':
+                subprocess.run(['sudo', 'shutdown', '-h', '+1'])
+                return True, "Shutdown scheduled in 1 minute"
+            else:
+                return False, f"Shutdown not supported on {platform.system()}"
+        except Exception as e:
+            log(f"Shutdown error: {e}")
+            return False, f"Shutdown failed: {str(e)}"
+    
+    def show_message(self, message: str, title: str = "Trace Admin") -> bool:
+        """Display a message to the user"""
+        log(f"MESSAGE COMMAND: {title} - {message}")
+        try:
+            if platform.system() == 'Windows':
+                # Run in a separate thread to not block
+                def show_box():
+                    MessageBox(None, message, title, 0x40)  # MB_ICONINFORMATION
+                threading.Thread(target=show_box, daemon=True).start()
+                return True
+            elif platform.system() == 'Linux':
+                subprocess.Popen(['notify-send', title, message])
+                return True
+            elif platform.system() == 'Darwin':
+                subprocess.Popen(['osascript', '-e', f'display notification "{message}" with title "{title}"'])
+                return True
+            else:
+                log(f"Message display not supported on {platform.system()}")
+                return False
+        except Exception as e:
+            log(f"Message display error: {e}")
+            return False
+    
+    def execute_command(self, command: str) -> tuple:
+        """Execute a custom command (use with extreme caution)"""
+        log(f"EXECUTE COMMAND: {command}")
+        try:
+            # Security: only allow certain commands
+            allowed_prefixes = ['ipconfig', 'hostname', 'whoami', 'systeminfo', 'tasklist']
+            is_allowed = any(command.lower().startswith(prefix) for prefix in allowed_prefixes)
+            
+            if not is_allowed:
+                return False, "Command not in allowed list for security reasons"
+            
+            result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT, timeout=30)
+            return True, result.decode('utf-8', errors='ignore')[:5000]  # Limit output size
+        except subprocess.TimeoutExpired:
+            return False, "Command timed out"
+        except subprocess.CalledProcessError as e:
+            return False, f"Command failed: {e.output.decode('utf-8', errors='ignore')[:1000]}"
+        except Exception as e:
+            return False, f"Error: {str(e)}"
     
     def lock_device(self):
         """Lock the device"""

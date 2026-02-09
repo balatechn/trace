@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { devicesApi } from '@/lib/api';
 import { useIsAdmin } from '@/lib/auth';
 import { cn, formatDate, formatRelativeTime, getStatusColor, formatStatus } from '@/lib/utils';
+import { RemoteControlPanel } from '@/components/dashboard/RemoteControlPanel';
 import {
   Laptop,
   Search,
@@ -19,6 +20,7 @@ import {
   Eye,
   X,
   AlertTriangle,
+  Monitor,
 } from 'lucide-react';
 
 interface Device {
@@ -76,6 +78,8 @@ export default function DevicesPage() {
   const [showWipeModal, setShowWipeModal] = useState(false);
   const [wipingDevice, setWipingDevice] = useState<Device | null>(null);
   const [wipeReason, setWipeReason] = useState('');
+  const [showRemoteControl, setShowRemoteControl] = useState(false);
+  const [remoteControlDevice, setRemoteControlDevice] = useState<Device | null>(null);
   const [wipeConfirm, setWipeConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
@@ -435,8 +439,15 @@ export default function DevicesPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button className="p-1 text-gray-400 hover:text-gray-600">
-                          <Eye className="h-4 w-4" />
+                        <button 
+                          onClick={() => {
+                            setRemoteControlDevice(device);
+                            setShowRemoteControl(true);
+                          }}
+                          className="p-1 text-primary-600 hover:text-primary-700"
+                          title="Remote Control"
+                        >
+                          <Monitor className="h-4 w-4" />
                         </button>
                         {isAdmin && (
                           <>
@@ -909,6 +920,18 @@ export default function DevicesPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Remote Control Panel */}
+      {showRemoteControl && remoteControlDevice && (
+        <RemoteControlPanel
+          device={remoteControlDevice}
+          onClose={() => {
+            setShowRemoteControl(false);
+            setRemoteControlDevice(null);
+          }}
+          onRefresh={fetchDevices}
+        />
       )}
     </div>
   );

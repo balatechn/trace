@@ -8,6 +8,8 @@ from app.models.location import LocationHistory
 from app.models.geofence import Geofence, GeofenceType
 from app.models.alert import Alert, AlertType, AlertSeverity
 from app.models.audit import AuditLog, AuditAction
+from app.models.command import RemoteCommand, CommandType, CommandStatus
+from app.models.chat import ChatMessage, MessageDirection
 
 __all__ = [
     "Base",
@@ -26,4 +28,9 @@ __all__ = [
     "AlertSeverity",
     "AuditLog",
     "AuditAction",
+    "RemoteCommand",
+    "CommandType",
+    "CommandStatus",
+    "ChatMessage",
+    "MessageDirection",
 ]

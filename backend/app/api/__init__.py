@@ -2,7 +2,7 @@
 API routes package
 """
 from fastapi import APIRouter
-from app.api.routes import auth, users, devices, agent, locations, geofences, alerts, audit
+from app.api.routes import auth, users, devices, agent, locations, geofences, alerts, audit, commands
 
 api_router = APIRouter()
 
@@ -15,3 +15,4 @@ api_router.include_router(locations.router)
 api_router.include_router(geofences.router)
 api_router.include_router(alerts.router)
 api_router.include_router(audit.router)
+api_router.include_router(commands.router)
