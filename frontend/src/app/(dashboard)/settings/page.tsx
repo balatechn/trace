@@ -11,6 +11,10 @@ import {
   MapPin,
   Save,
   RefreshCw,
+  Download,
+  Laptop,
+  Monitor,
+  Apple,
 } from 'lucide-react';
 
 interface PolicySettings {
@@ -314,6 +318,86 @@ export default function SettingsPage() {
               />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
             </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Agent Download */}
+      <div className="card">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Download className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Trace Agent</h2>
+            <p className="text-sm text-gray-500">Download and install the agent on devices to track</p>
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="bg-gray-50 rounded-lg p-4">
+            <p className="text-sm text-gray-600 mb-4">
+              The Trace Agent runs in the background on employee devices and reports location data to the server.
+              Install it on each device you want to monitor.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Windows */}
+              <a
+                href="/downloads/TraceAgent-Windows.exe"
+                download
+                className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:border-primary-500 hover:shadow-md transition-all group"
+              >
+                <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100">
+                  <Monitor className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Windows</p>
+                  <p className="text-xs text-gray-500">Windows 10/11</p>
+                </div>
+                <Download className="h-4 w-4 text-gray-400 ml-auto group-hover:text-primary-600" />
+              </a>
+              
+              {/* macOS */}
+              <a
+                href="/downloads/TraceAgent-macOS.dmg"
+                download
+                className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:border-primary-500 hover:shadow-md transition-all group"
+              >
+                <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-gray-200">
+                  <Apple className="h-6 w-6 text-gray-700" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">macOS</p>
+                  <p className="text-xs text-gray-500">macOS 12+</p>
+                </div>
+                <Download className="h-4 w-4 text-gray-400 ml-auto group-hover:text-primary-600" />
+              </a>
+              
+              {/* Linux */}
+              <a
+                href="/downloads/TraceAgent-Linux.AppImage"
+                download
+                className="flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:border-primary-500 hover:shadow-md transition-all group"
+              >
+                <div className="p-2 bg-orange-50 rounded-lg group-hover:bg-orange-100">
+                  <Laptop className="h-6 w-6 text-orange-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Linux</p>
+                  <p className="text-xs text-gray-500">Ubuntu/Debian</p>
+                </div>
+                <Download className="h-4 w-4 text-gray-400 ml-auto group-hover:text-primary-600" />
+              </a>
+            </div>
+          </div>
+          
+          <div className="border-t pt-4">
+            <h3 className="font-medium text-gray-900 mb-2">Installation Instructions</h3>
+            <ol className="list-decimal list-inside text-sm text-gray-600 space-y-1">
+              <li>Download the agent for your operating system</li>
+              <li>Run the installer as Administrator</li>
+              <li>The agent will start automatically and run in the background</li>
+              <li>Device will appear in the dashboard within 1 minute</li>
+            </ol>
           </div>
         </div>
       </div>

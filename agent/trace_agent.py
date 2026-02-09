@@ -23,7 +23,7 @@ LOG_FILE = Path(os.getenv('APPDATA', '.')) / 'Trace' / 'agent.log'
 
 # Default settings
 DEFAULT_CONFIG = {
-    'server_url': 'http://192.168.10.70:8000/api/v1',
+    'server_url': 'https://trace-backend-1-aete.onrender.com/api/v1',
     'ping_interval': 30,  # 30 seconds for testing
     'serial_number': '',
     'asset_id': '',
